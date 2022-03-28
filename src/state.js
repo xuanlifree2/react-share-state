@@ -7,7 +7,7 @@ const subscribeState = (subject$, id, cb, initValue, withPrev = false) =>
     ?.pipe(
       filter(({ id: key }) => key === id),
       // support function value as react setState: setSate(n=>n+1)
-      scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue])
+      scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue]),
       // startWith([undefined, initValue])
     )
     .subscribe(([prev, current]) => (withPrev ? cb?.(prev, current) : cb?.(current)));
@@ -34,7 +34,7 @@ export const useGetState = (id, initValue, withPrev = false) => {
   useEffect(() => {
     const sub = subscribeState(subject$, id, setState, initValue, withPrev);
     return () => sub.unsubscribe();
-  }, [id, subject$]);
+  }, [id, subject$, initValue, withPrev]);
   return state;
 };
 
@@ -45,7 +45,7 @@ export const useGetCallback = (id, cb, withPrev = false) => {
   useEffect(() => {
     const sub = subscribeState(subject$, id, cb, withPrev);
     return () => sub?.unsubscribe();
-  }, [id, subject$, cb]);
+  }, [id, subject$, cb, withPrev]);
 };
 
 // NOTE: this hooks will not cause rerender even data changed
@@ -60,10 +60,10 @@ export const useGetRef = (id, initValue, withPrev = false) => {
         stateRef.current = v;
       },
       initValue,
-      withPrev
+      withPrev,
     );
     return () => sub?.unsubscribe();
-  }, [id, subject$]);
+  }, [id, subject$, initValue, withPrev]);
 
   return stateRef;
 };
