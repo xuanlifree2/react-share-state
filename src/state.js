@@ -2,15 +2,15 @@ import { useCallback, useState, useRef, useContext, createContext, useEffect } f
 import { Subject, identity } from 'rxjs';
 import { filter, scan, startWith } from 'rxjs/operators';
 
-const subscribeState = (subject$, id, cb, initValue) =>
+const subscribeState = (subject$, id, cb, initValue, withPrev = false) =>
   subject$
-    .pipe(
+    ?.pipe(
       filter(({ id: key }) => key === id),
       // support function value as react setState: setSate(n=>n+1)
       scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue])
       // startWith([undefined, initValue])
     )
-    .subscribe(([, current]) => cb?.(current));
+    .subscribe(([prev, current]) => (withPrev ? cb?.(prev, current) : cb?.(current)));
 
 const Context = createContext();
 
@@ -28,31 +28,30 @@ export const useSetState = (id) => {
 };
 
 // id: unique for every state
-export const useGetState = (id, initValue) => {
+export const useGetState = (id, initValue, withPrev = false) => {
   const subject$ = useContext(Context);
   const [state, setState] = useState(initValue);
   useEffect(() => {
-    const sub = subscribeState(subject$, id, setState, initValue);
+    const sub = subscribeState(subject$, id, setState, initValue, withPrev);
     return () => sub.unsubscribe();
   }, [id, subject$]);
   return state;
 };
 
 // callback for data change
-export const useGetCallback = (id, cb) => {
+export const useGetCallback = (id, cb, withPrev = false) => {
   const subject$ = useContext(Context);
 
   useEffect(() => {
-    const sub = subscribeState(subject$, id, cb);
+    const sub = subscribeState(subject$, id, cb, withPrev);
     return () => sub?.unsubscribe();
   }, [id, subject$, cb]);
 };
 
 // NOTE: this hooks will not cause rerender even data changed
-export const useGetRef = (id, initValue) => {
+export const useGetRef = (id, initValue, withPrev = false) => {
   const subject$ = useContext(Context);
   const stateRef = useRef(initValue);
-
   useEffect(() => {
     const sub = subscribeState(
       subject$,
@@ -60,7 +59,8 @@ export const useGetRef = (id, initValue) => {
       (v) => {
         stateRef.current = v;
       },
-      initValue
+      initValue,
+      withPrev
     );
     return () => sub?.unsubscribe();
   }, [id, subject$]);
