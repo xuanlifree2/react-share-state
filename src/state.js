@@ -1,16 +1,17 @@
 import { useCallback, useState, useRef, useContext, createContext, useEffect } from 'react';
-import { Subject, identity } from 'rxjs';
-import { filter, scan, startWith } from 'rxjs/operators';
+import { Subject } from 'rxjs';
+import { filter, scan } from 'rxjs/operators';
+
+const buildState = (subject$, id, initValue) =>
+  subject$?.pipe(
+    filter(({ id: key }) => key === id),
+    // support function value as react setState: setSate(n=>n+1)
+    scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue]),
+    // startWith([undefined, initValue])
+  );
 
 const subscribeState = (subject$, id, cb, initValue) =>
-  subject$
-    ?.pipe(
-      filter(({ id: key }) => key === id),
-      // support function value as react setState: setSate(n=>n+1)
-      scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue]),
-      // startWith([undefined, initValue])
-    )
-    .subscribe(([prev, current]) => cb?.(prev, current));
+  buildState(subject$, id, initValue).subscribe(([prev, current]) => cb?.(prev, current));
 
 const Context = createContext();
 
