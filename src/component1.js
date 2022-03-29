@@ -2,7 +2,7 @@ import { useGetState, useSetState, useGetRef } from './state';
 
 export default () => {
   const set = useSetState('a');
-  const state = useGetState('a', 0);
+  const [prev, current] = useGetState('a', 0, true);
   const statB = useGetRef('b', 0);
   return (
     <div>
@@ -13,7 +13,9 @@ export default () => {
       >
         change state
       </button>
-      <span>{state}</span>
+      <span>
+        {prev} {current}
+      </span>
       <div>from b: {statB.current}</div>
     </div>
   );
