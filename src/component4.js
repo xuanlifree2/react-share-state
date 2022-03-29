@@ -5,10 +5,7 @@ export default () => {
   const [state, setState] = useState([0, 0]);
   const set = useSetState('d');
   const sub = useSub('d');
-  useEffect(() => {
-    const s = sub((prev, current) => setState([prev, current]));
-    return () => s.unsubscribe();
-  }, [sub]);
+  useEffect(() => () => sub((prev, current) => setState([prev, current])), [sub]);
 
   return (
     <div>

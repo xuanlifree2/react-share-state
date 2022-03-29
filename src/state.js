@@ -57,7 +57,8 @@ export const useSub = (id) => {
 
   const sub = useCallback(
     (cb) => {
-      return subscribeState(subject$, id, cb);
+      const s = subscribeState(subject$, id, cb);
+      return () => s.unsubscribe();
     },
     [id, subject$],
   );
