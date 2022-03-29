@@ -4,6 +4,7 @@ export default () => {
   const set = useSetState('a');
   const state = useGetState('a', 0);
   const statB = useGetRef('b', 0);
+  const statC = useGetState('c');
   return (
     <div>
       <button
@@ -15,6 +16,7 @@ export default () => {
       </button>
       <span>{state}</span>
       <div>from b: {statB.current}</div>
+      <div>from c: {statC}</div>
     </div>
   );
 };
