@@ -52,6 +52,19 @@ export const useGetCallback = (id, cb) => {
   }, [id, subject$]);
 };
 
+export const useSub = (id) => {
+  const subject$ = useContext(Context);
+
+  const sub = useCallback(
+    (cb) => {
+      return subscribeState(subject$, id, cb);
+    },
+    [id, subject$],
+  );
+  // useEffect(() => () => sub(), [sub]);
+  return sub;
+};
+
 // NOTE: this hooks will not cause rerender even data changed
 export const useGetRef = (id, initValue) => {
   const subject$ = useContext(Context);
