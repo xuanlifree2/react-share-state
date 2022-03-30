@@ -1,22 +1,25 @@
-import { useGetState, useSetState, useGetRef } from './state';
+import { useEffect, useState } from 'react';
+import { useGet, useSet, useSub } from './state';
 
 export default () => {
-  const set = useSetState('a');
-  const state = useGetState('a', 0);
-  const statB = useGetRef('b', 0);
-  const statC = useGetState('c');
+  const setA = useSet('a');
+  const subA = useSub('a');
+  const getB = useGet('b');
+  const getC = useGet('c');
+  const [stateA, setStateA] = useState(10);
+  useEffect(() => subA(setStateA), [subA]);
   return (
     <div>
       <button
         onClick={() => {
-          set((n) => n + 1);
+          setA((n) => (n ?? 0) + 1);
         }}
       >
-        change state
+        change state a
       </button>
-      <span>{state}</span>
-      <div>from b: {statB.current}</div>
-      <div>from c: {statC}</div>
+      <div>from a: {stateA}</div>
+      <div>from b: {getB()}</div>
+      <div>from c: {getC()}</div>
     </div>
   );
 };

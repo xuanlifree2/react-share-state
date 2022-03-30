@@ -1,22 +1,28 @@
-import { useGetCallback, useSetState } from './state';
-import { useState } from 'react';
+import { useSub, useSet, useGet } from './state';
+import { useEffect, useState } from 'react';
 
 export default () => {
   const [state, setState] = useState([0, 0]);
-  useGetCallback('c', (prev, current) => setState([prev, current]));
-  const set = useSetState('c');
+  const setC = useSet('c');
+  const subC = useSub('c');
+  const getA = useGet('a');
+  const getB = useGet('b');
+  useEffect(() => subC((prev, current) => setState([prev, current]), { prev: true }), [subC]);
+
   return (
     <div>
       <button
         onClick={() => {
-          set((n) => (n ?? 0) + 1);
+          setC((n) => (n ?? 0) + 1);
         }}
       >
-        change state
+        change state c
       </button>
-      <span>
-        {state[0]} {state[1]}
-      </span>
+      <div>from a: {getA()}</div>
+      <div>from b: {getB()}</div>
+      <div>
+        from c: {state[0]} {state[1]}
+      </div>
     </div>
   );
 };

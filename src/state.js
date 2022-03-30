@@ -6,7 +6,7 @@ const buildState = (subject$, id, initValue) =>
   subject$?.pipe(
     filter(({ id: key }) => key === id),
     // support function value as react setState: setSate(n=>n+1)
-    scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue]),
+    scan(([, prev], { value }) => [prev, typeof value === 'function' ? value(prev) : value], [undefined, initValue])
     // startWith([undefined, initValue])
   );
 
@@ -22,65 +22,35 @@ export const StateProvider = ({ children }) => {
   return <Context.Provider value={subject$.current}>{children}</Context.Provider>;
 };
 
-export const useSetState = (id) => {
+export const useSet = (id) => {
   const subject$ = useContext(Context);
   const setS = useCallback((value) => subject$?.next({ id, value }), [id, subject$]);
   return setS;
 };
 
-// id: unique for every state
-export const useGetState = (id, initValue) => {
+export const useGet = (id) => {
   const subject$ = useContext(Context);
-  const [state, setState] = useState(initValue);
+  const value = useRef([]);
   useEffect(() => {
-    const sub = subscribeState(subject$, id, (_, current) => setState(current), initValue);
+    const sub = subscribeState(subject$, id, (prev, current) => {
+      value.current = [prev, current];
+    });
     return () => sub.unsubscribe();
-  }, [id, subject$, initValue]);
-  return state;
-};
-
-// callback for data change with prev, current data
-export const useGetCallback = (id, cb) => {
-  const subject$ = useContext(Context);
-  const effect = useRef();
-  effect.current = cb;
-
-  // whenever id changed, we will use latest cb as callback and use ref to avoid put it in dependency
-  useEffect(() => {
-    const sub = subscribeState(subject$, id, effect.current);
-    return () => sub?.unsubscribe();
   }, [id, subject$]);
+
+  return useCallback(({ withPrev = false } = {}) => {
+    const [, current] = value.current;
+    return withPrev ? value.current : current;
+  }, []);
 };
 
 export const useSub = (id) => {
   const subject$ = useContext(Context);
-
-  const sub = useCallback(
-    (cb) => {
-      const s = subscribeState(subject$, id, cb);
+  return useCallback(
+    (cb, { withPrev = false } = {}) => {
+      const s = subscribeState(subject$, id, (prev, current) => (withPrev ? cb?.(prev, current) : cb?.(current)));
       return () => s.unsubscribe();
     },
-    [id, subject$],
+    [id, subject$]
   );
-  // useEffect(() => () => sub(), [sub]);
-  return sub;
-};
-
-// NOTE: this hooks will not cause rerender even data changed
-export const useGetRef = (id, initValue) => {
-  const subject$ = useContext(Context);
-  const stateRef = useRef(initValue);
-  useEffect(() => {
-    const sub = subscribeState(
-      subject$,
-      id,
-      (_, current) => {
-        stateRef.current = current;
-      },
-      initValue,
-    );
-    return () => sub?.unsubscribe();
-  }, [id, subject$, initValue]);
-
-  return stateRef;
 };
