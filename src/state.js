@@ -21,7 +21,7 @@ export const StateProvider = ({ children }) => {
 
 export const useStream = (id, initValue, { prev = false } = {}) => {
   const subject$ = useContext(Context);
-  return subject$.pipe(filterBy(id), prev ? withPrev() : identity());
+  return subject$.pipe(filterBy(id), prev ? withPrev() : identity);
 };
 
 export const useSet = (id) => {
