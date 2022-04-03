@@ -7,7 +7,7 @@ export default () => {
   const subC = useSub('c');
   const getA = useGet('a');
   const getB = useGet('b');
-  useEffect(() => subC((prev, current) => setState([prev, current]), { withPrev: true }), [subC]);
+  useEffect(() => subC(([prev, current]) => setState([prev, current]), { prev: true }), [subC]);
 
   return (
     <div>
